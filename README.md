@@ -1,4 +1,4 @@
-# batocera.pro
+# KBato.pro
 <br><br><br><br>
 <b>This repo is scheduled for phase out and is not supported anymore</b><br>
 <br><br><br><br>
