@@ -1,6 +1,6 @@
 # KBato.pro
 <br><br><br><br>
-<b>This repo is scheduled for phase out and is not supported anymore</b><br>
+<b>This repo isaa of now 100% made by the original Batocera.Pro team! I have done nothing but fork that repo and change urls to work </b><br>
 <br><br><br><br>
 <b><i>Unofficial Apps for Batocera x86_64 (AMD/Intel)</i></b><br>
 <br>
