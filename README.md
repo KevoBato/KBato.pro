@@ -17,14 +17,14 @@ The full Arch Container applist can be viewed via:<br>
 <br>
 <br>
 <b></i>HOW TO INSTALL: </font></b></i><br>
-DOWNLOAD THE INSTALLER APP IN SSH/XTERM: ``` curl -L app.batocera.pro | bash ```<br>
-AND THEN RUN IT FROM PORTS<br>
+<br>
+<br>
 <br>
 <b></i>HOW TO REMOVE AN APP: </font></b></i><br>
 Remove the app folder in /userdata/system/pro/ and the launcher in ports if present, <br>
 the icon in the F1-applications menu will disappear after restart.<br>
 <br>
-<img src="https://github.com/uureel/batocera.pro/raw/main/app/pro.PNG" style="width:50%;height:auto;"/>
+<img src="" style="width:50%;height:auto;"/>
 <br>
 <br>
 ALTERNATIVE INSTALL METHOD:<BR>
