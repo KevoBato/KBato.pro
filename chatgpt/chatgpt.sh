@@ -55,7 +55,7 @@ mkdir $pro/$appname/extra 2>/dev/null
 # --------------------------------------------------------------------
 # -- prepare dependencies for this app and the installer: 
 mkdir -p ~/pro/.dep 2>/dev/null && cd ~/pro/.dep && wget --tries=10 --no-check-certificate --no-cache --no-cookies -q -O ~/pro/.dep/dep.zip https://github.com/uureel/batocera.pro/raw/main/.dep/dep.zip && yes "y" | unzip -oq ~/pro/.dep/dep.zip && cd ~/
-wget --tries=10 --no-check-certificate --no-cache --no-cookies -q -O $pro/$appname/extra/icon.png https://github.com/KevoBato/KBato.pro/blob/main/$appname/extra/icon.png; chmod a+x $dep/* 2>/dev/null; cd ~/
+wget --tries=10 --no-check-certificate --no-cache --no-cookies -q -O $pro/$appname/extra/icon.png https://raw.githubusercontent.com/KevoBato/KBato.pro/refs/heads/main/chatgpt/extra/icon.png; chmod a+x $dep/* 2>/dev/null; cd ~/
 chmod 777 ~/pro/.dep/* && for file in /userdata/system/pro/.dep/lib*; do sudo ln -s "$file" "/usr/lib/$(basename $file)"; done
 # --------------------------------------------------------------------
 # // end of dependencies 
@@ -296,7 +296,7 @@ cp $port "/userdata/roms/ports/chatgpt.sh"
 # --------------------------------------------------------------------
 # -- get icon for shortcut,
 icon=/userdata/system/pro/$appname/extra/icon.png
-wget -q -O $icon https://github.com/KevoBato/KBato.pro/blob/main/$appname/extra/icon.png
+wget -q -O $icon https://raw.githubusercontent.com/KevoBato/KBato.pro/refs/heads/main/chatgpt/extra/icon.png
 # //
 # -- get padtokey profile
 if [[ ! -e "/userdata/roms/ports/chatgpt.sh.keys" ]]; then
