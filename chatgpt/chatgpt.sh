@@ -301,7 +301,7 @@ wget -q -O $icon https://github.com/KevoBato/KBato.pro/blob/main/$appname/extra/
 # -- get padtokey profile
 if [[ ! -e "/userdata/roms/ports/chatgpt.sh.keys" ]]; then
   rm "/userdata/roms/ports/chatgpt.sh.keys" 2>/dev/null
-  wget -q -O "/userdata/roms/ports/chatgpt.sh.keys" "https://github.com/KevoBato/KBato.pro/blob/main/chatgpt/extra/chatgpt.sh.keys"
+  wget -q -O "/userdata/roms/ports/chatgpt.sh.keys" "https://github.com/KevoBato/KBato.pro/raw/refs/heads/main/chatgpt/extra/chatgpt.sh.keys"
   dos2unix "/userdata/roms/ports/chatgpt.sh.keys" 2>/dev/null
 fi
 # //
