@@ -5,7 +5,7 @@
 # --------------------------------------------------------------------
 # --------------------------------------------------------------------
 # --------------------------------------------------------------------
-APPNAME=ChatGPT # for installer info
+APPNAME=chatgpt # for installer info
 appname=chatgpt # directory name in /userdata/system/pro/...
 AppName=chatgpt # App.AppImage name
 APPPATH=/userdata/system/pro/$appname/$AppName.AppImage
@@ -55,7 +55,7 @@ mkdir $pro/$appname/extra 2>/dev/null
 # --------------------------------------------------------------------
 # -- prepare dependencies for this app and the installer: 
 mkdir -p ~/pro/.dep 2>/dev/null && cd ~/pro/.dep && wget --tries=10 --no-check-certificate --no-cache --no-cookies -q -O ~/pro/.dep/dep.zip https://github.com/uureel/batocera.pro/raw/main/.dep/dep.zip && yes "y" | unzip -oq ~/pro/.dep/dep.zip && cd ~/
-wget --tries=10 --no-check-certificate --no-cache --no-cookies -q -O $pro/$appname/extra/icon.png https://github.com/uureel/batocera.pro/raw/main/$appname/extra/icon.png; chmod a+x $dep/* 2>/dev/null; cd ~/
+wget --tries=10 --no-check-certificate --no-cache --no-cookies -q -O $pro/$appname/extra/icon.png https://github.com/KevoBato/KBato.pro/blob/main/$appname/extra/icon.png; chmod a+x $dep/* 2>/dev/null; cd ~/
 chmod 777 ~/pro/.dep/* && for file in /userdata/system/pro/.dep/lib*; do sudo ln -s "$file" "/usr/lib/$(basename $file)"; done
 # --------------------------------------------------------------------
 # // end of dependencies 
@@ -274,7 +274,7 @@ echo 'unclutter-remote -s' >> $launcher
 ###################################################################### 
 ######################################################################
 ######################################################################
-echo 'DISPLAY=:0.0 LD_LIBRARY_PATH=/userdata/system/pro/.dep:$LD_LIBRARY_PATH /userdata/system/pro/'$appname'/'$AppName'.AppImage --no-sandbox --test-type --start-fullscreen --force-device-scale-factor=1.6 "netflix.com"' >> $launcher
+echo 'DISPLAY=:0.0 LD_LIBRARY_PATH=/userdata/system/pro/.dep:$LD_LIBRARY_PATH /userdata/system/pro/'$appname'/'$AppName'.AppImage --no-sandbox --test-type --start-fullscreen --force-device-scale-factor=1.6 "chatgpt.com"' >> $launcher
 ######################################################################
 ######################################################################
 ######################################################################
@@ -285,24 +285,24 @@ chmod a+x $launcher
 # //
 # --------------------------------------------------------------------
 # -- prepare Ports file, 
-port=/userdata/system/pro/$appname/ChatGPT.sh
+port=/userdata/system/pro/$appname/chatgpt.sh
 rm -rf $port 2>/dev/null
 echo '#!/bin/bash ' >> $port
 echo 'unclutter-remote -s' >> $port
 echo 'DISPLAY=:0.0 LD_LIBRARY_PATH=/userdata/system/pro/.dep:$LD_LIBRARY_PATH /userdata/system/pro/'$appname'/'$AppName'.AppImage --no-sandbox --test-type --start-fullscreen --force-device-scale-factor=1.6 "chatgpt.com"' >> $port
 dos2unix $port 
 chmod a+x $port 
-cp $port "/userdata/roms/ports/Netflix.sh" 
+cp $port "/userdata/roms/ports/chatgpt.sh" 
 # --------------------------------------------------------------------
 # -- get icon for shortcut,
 icon=/userdata/system/pro/$appname/extra/icon.png
-wget -q -O $icon https://github.com/uureel/batocera.pro/raw/main/$appname/extra/icon.png
+wget -q -O $icon https://github.com/KevoBato/KBato.pro/blob/main/$appname/extra/icon.png
 # //
 # -- get padtokey profile
-if [[ ! -e "/userdata/roms/ports/Netflix.sh.keys" ]]; then
-  rm "/userdata/roms/ports/Netflix.sh.keys" 2>/dev/null
-  wget -q -O "/userdata/roms/ports/Netflix.sh.keys" "https://raw.githubusercontent.com/uureel/batocera.pro/main/netflix/extra/Netflix.sh.keys"
-  dos2unix "/userdata/roms/ports/Netflix.sh.keys" 2>/dev/null
+if [[ ! -e "/userdata/roms/ports/chatgpt.sh.keys" ]]; then
+  rm "/userdata/roms/ports/chatgpt.sh.keys" 2>/dev/null
+  wget -q -O "/userdata/roms/ports/chatgpt.sh.keys" "https://github.com/KevoBato/KBato.pro/blob/main/chatgpt/extra/chatgpt.sh.keys"
+  dos2unix "/userdata/roms/ports/chatgpt.sh.keys" 2>/dev/null
 fi
 # //
 # -- prepare f1 - applications - app shortcut, 
