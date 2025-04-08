@@ -107,7 +107,7 @@ arch=$(uname -m)
 
 if [ "$arch" == "x86_64" ]; then
     echo "Architecture: x86_64 detected."
-    appimage_url=$(curl -s https://api.github.com/repos/ivan-hc/Chrome-appimage/releases/latest | jq -r ".assets[] | select(.name | endswith(\".AppImage\")) | .browser_download_url")
+    appimage_url=$(curl -s https://api.github.com/repos/ivan-hc/Chrome-appimage/releases/latest | jq -r '.assets[] | select(.name | endswith(".AppImage") and contains("Google-Chrome-stable")) | .browser_download_url')
 else
     echo "Unsupported architecture: $arch. Exiting."
     exit 1
@@ -128,7 +128,7 @@ echo "Google Chrome AppImage downloaded and marked as executable."
 # Step 6: Create the Google Chrome Script in Ports
 echo "Creating Google Chrome script in Ports..."
 mkdir -p /userdata/roms/ports
-cat << 'EOF' > /userdata/roms/ports/GoogleChrome.sh
+cat << 'EOF' > /userdata/roms/ports/BatoDesktop.sh
 #!/bin/bash
 
 # Environment setup
@@ -149,11 +149,10 @@ mkdir -p "${log_dir}"
 exec &> >(tee -a "$log_file")
 echo "$(date): Launching Google Chrome"
 
-
-# Launch Google Chrome AppImage
+# Launch Google Chrome AppImage in fullscreen kiosk mode to the Webtop UI
 if [ -x "${app_image}" ]; then
     cd "${app_dir}"
-    ./GoogleChrome.AppImage --no-sandbox --test-type "$@" > "${log_file}" 2>&1
+    DISPLAY=:0.0 ./GoogleChrome.AppImage --no-sandbox --test-type --start-fullscreen --force-device-scale-factor=1.6 'http://localhost:3000' > "${log_file}" 2>&1
     echo "Google Chrome exited."
 else
     echo "GoogleChrome.AppImage not found or not executable."
@@ -161,10 +160,10 @@ else
 fi
 EOF
 
-chmod +x /userdata/roms/ports/GoogleChrome.sh
+chmod +x /userdata/roms/ports/BatoDesktop.sh
 
 # Step 7: Create the persistent desktop entry
-APPNAME="Chrome"
+APPNAME="BatoDesktop"
 DESKTOP_FILE="/usr/share/applications/${APPNAME}.desktop"
 PERSISTENT_DESKTOP="/userdata/system/configs/${APPNAME,,}/${APPNAME}.desktop"
 ICON_URL="https://github.com/DTJW92/batocera-unofficial-addons/raw/main/${APPNAME,,}/extra/icon.png"
@@ -179,7 +178,7 @@ cat <<EOF > "$PERSISTENT_DESKTOP"
 Version=1.0
 Type=Application
 Name=Google Chrome
-Exec=/userdata/roms/ports/GoogleChrome.sh
+Exec=/userdata/roms/ports/BatoDesktop.sh
 Icon=/userdata/system/add-ons/google-chrome/extra/icon.png
 Terminal=false
 Categories=Game;batocera.linux;
@@ -225,7 +224,11 @@ echo "Downloading Google Chrome logo..."
 curl -L -o /userdata/roms/ports/images/chrome-logo.png https://github.com/DTJW92/batocera-unofficial-addons/raw/main/chrome/extra/chrome-logo.png
 echo "Adding logo to Google Chrome entry in gamelist.xml..."
 xmlstarlet ed -s "/gameList" -t elem -n "game" -v "" \
-  -s "/gameList/game[last()]" -t elem -n "path" -v "./GoogleChrome.sh" \
-  -s "/gameList/game[last()]" -t elem -n "name" -v "Google Chrome" \
+  -s "/gameList/game[last()]" -t elem -n "path" -v "./BatoDesktop.sh" \
+  -s "/gameList/game[last()]" -t elem -n "name" -v "BatoDesktop" \
   -s "/gameList/game[last()]" -t elem -n "image" -v "./images/chrome-logo.png" \
-  /userdata/roms/ports/gamelist.xml > /userdata/roms/ports/gamelist.xml.tmp && mv /userdata/rom
+  /userdata/roms/ports/gamelist.xml > /userdata/roms/ports/gamelist.xml.tmp && mv /userdata/roms/ports/gamelist.xml.tmp /userdata/roms/ports/gamelist.xml
+curl http://127.0.0.1:1234/reloadgames
+
+echo
+echo "KevoBato Was Here! You can now launch BatoDesktop from the Ports menu."
