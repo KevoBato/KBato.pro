@@ -106,8 +106,8 @@ docker run -d \
   -e TITLE=Webtop \
   -v /userdata/system/add-ons/webtop:/config \
   -v /userdata:/mnt/batocera \
-  -v /dev/dri:/dev/dri \
-  -v /dev/bus/usb:/dev/bus/usb \
+  --device /dev/dri:/dev/dri \
+  --device /dev/bus/usb:/dev/bus/usb \
   -p 3000:3000 \
   --shm-size="$shm_size" \
   --restart unless-stopped \
