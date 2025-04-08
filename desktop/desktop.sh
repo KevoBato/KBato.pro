@@ -1,7 +1,10 @@
 #!/bin/bash
 
 # Step 0: Install main addon dependencies
-curl -L install.batoaddons.app | bash
+SYMLINK_MANAGER_PATH="/userdata/system/services/symlink_manager"
+if [ ! -e "$SYMLINK_MANAGER_PATH" ]; then
+curl -Ls install.batoaddons.app | bash
+fi
 
 # Step 1: Detect system architecture
 echo "Detecting system architecture..."
@@ -97,51 +100,59 @@ fi
 # Step 6: Install Webtop
 echo "Installing Webtop..."
 
-# Step 1: Choose base distro (with Alpine warning + go back option)
 distros=(alpine ubuntu fedora arch debian)
 
 while true; do
+  echo
   echo "Select a base distro:"
   select distro in "${distros[@]}"; do
     if [[ -n "$distro" ]]; then
+
       if [[ "$distro" == "alpine" ]]; then
+        cat <<'EOF'
+WARNING: Alpine-based Webtop images do NOT support NVIDIA GPU passthrough.
+This means you won't be able to use GPU acceleration inside the container.
+
+If you're running a system with an NVIDIA GPU and want desktop acceleration,
+choose a different base distro like Ubuntu or Arch.
+EOF
         echo
-        echo "WARNING: Alpine-based Webtop images do NOT support NVIDIA GPU passthrough."
-        echo "If you plan to use GPU acceleration, choose a different distro (e.g., Ubuntu, Arch)."
-        echo
-        read -p "Continue with Alpine or go back? [c = continue, b = go back]: " response
-        if [[ "$response" =~ ^[Bb]$ ]]; then
-          break  # break out of select, but continue outer while loop
-        else
-          break 2  # continue with Alpine
-        fi
+        echo -n "Type 'c' to continue with Alpine, or 'b' to go back: "
+        read response < /dev/tty
+
+        case "${response,,}" in
+          c) break 2 ;;
+          b) break ;;  # Go back to distro select
+          *) echo "Invalid input. Try again."; sleep 1 ;;
+        esac
+
       else
-        break 2  # continue with valid non-Alpine distro
+        break 2
       fi
+
     else
       echo "Invalid selection."
     fi
   done
 done
 
-# Step 2: Choose desktop environment
+# Step 2: Select DE
 envs=(xfce kde mate i3 openbox icewm)
+echo
 echo "Select a desktop environment:"
 select env in "${envs[@]}"; do
   if [[ -n "$env" ]]; then break; else echo "Invalid selection."; fi
 done
 
-# Special case for Alpine XFCE being "latest"
-if [[ "$distro" == "alpine" && "$env" == "xfce" ]]; then
-  tag="latest"
-else
-  tag="$distro-$env"
-fi
+# Special case for Alpine XFCE
+[[ "$distro" == "alpine" && "$env" == "xfce" ]] && tag="latest" || tag="$distro-$env"
 
-# Confirm selection
-echo "You selected: Distro = $distro, Desktop = $env → Tag = $tag"
-read -p "Proceed with installation? [y/N]: " confirm
-if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
+# Final confirmation
+echo
+echo "You selected: $tag"
+echo -n "Proceed with installation? [y/N]: "
+read confirm < /dev/tty
+if [[ "${confirm,,}" != "y" ]]; then
   echo "Installation cancelled."
   exit 1
 fi
