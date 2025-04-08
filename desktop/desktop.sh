@@ -17,67 +17,75 @@ else
     exit 1
 fi
 
-# Step 2: Download Docker & Podman container manager
-echo "Preparing & Downloading Docker & Podman..."
-directory="$HOME/batocera-containers"
-url="https://github.com/DTJW92/batocera-unofficial-addons/releases/download/AppImages/batocera-containers"
-filename="batocera-containers"
-mkdir -p "$directory"
-cd "$directory"
-wget -q --show-progress "$url" -O "$filename"
-chmod +x "$filename"
-echo "File '$filename' downloaded and made executable."
+# Step 1: Check if Docker is installed
+if ! command -v docker >/dev/null 2>&1; then
+    echo "Docker is not installed. Setting up batocera-containers..."
 
-# Update ~/custom.sh to autostart batocera-containers
-csh=/userdata/system/custom.sh; dos2unix $csh 2>/dev/null
-startup="/userdata/system/batocera-containers/batocera-containers &"
-if [[ -f $csh ]]; then
-    tmp1=/tmp/tcsh1
-    tmp2=/tmp/tcsh2
-    remove="$startup"
-    rm -f $tmp1 $tmp2
-    nl=$(cat "$csh" | wc -l); nl1=$(($nl + 1))
-    for l in $(seq 1 $nl1); do
-        ln=$(sed "${l}q;d" "$csh")
-        if [[ "$(echo "$ln" | grep "$remove")" == "" ]]; then
-            if [[ "$l" == "1" && "$(echo "$ln" | grep "#" | grep "/bin/" | grep "bash")" == "" ]]; then
-                echo "$ln" >> "$tmp1"
-            elif [[ "$l" != "1" ]]; then
-                echo "$ln" >> "$tmp1"
+    # Step 2: Download Docker & Podman container manager
+    echo "Preparing & Downloading Docker & Podman..."
+    directory="$HOME/batocera-containers"
+    url="https://github.com/DTJW92/batocera-unofficial-addons/releases/download/AppImages/batocera-containers"
+    filename="batocera-containers"
+    mkdir -p "$directory"
+    cd "$directory"
+    wget -q --show-progress "$url" -O "$filename"
+    chmod +x "$filename"
+    echo "File '$filename' downloaded and made executable."
+
+    # Update ~/custom.sh to autostart batocera-containers
+    csh=/userdata/system/custom.sh; dos2unix $csh 2>/dev/null
+    startup="/userdata/system/batocera-containers/batocera-containers &"
+    if [[ -f $csh ]]; then
+        tmp1=/tmp/tcsh1
+        tmp2=/tmp/tcsh2
+        remove="$startup"
+        rm -f $tmp1 $tmp2
+        nl=$(cat "$csh" | wc -l); nl1=$(($nl + 1))
+        for l in $(seq 1 $nl1); do
+            ln=$(sed "${l}q;d" "$csh")
+            if [[ "$(echo "$ln" | grep "$remove")" == "" ]]; then
+                if [[ "$l" == "1" && "$(echo "$ln" | grep "#" | grep "/bin/" | grep "bash")" == "" ]]; then
+                    echo "$ln" >> "$tmp1"
+                elif [[ "$l" != "1" ]]; then
+                    echo "$ln" >> "$tmp1"
+                fi
             fi
-        fi
-    done
-    echo -e '#!/bin/bash' > "$tmp2"
-    echo -e "\n$startup \n" >> "$tmp2"
-    cat "$tmp1" | sed -e '/./b' -e :n -e 'N;s/\n$//;tn' >> "$tmp2"
-    cp "$tmp2" "$csh"; dos2unix "$csh"; chmod a+x "$csh"
+        done
+        echo -e '#!/bin/bash' > "$tmp2"
+        echo -e "\n$startup \n" >> "$tmp2"
+        cat "$tmp1" | sed -e '/./b' -e :n -e 'N;s/\n$//;tn' >> "$tmp2"
+        cp "$tmp2" "$csh"; dos2unix "$csh"; chmod a+x "$csh"
+    else
+        echo -e '#!/bin/bash\n\n'"$startup\n" > "$csh"
+        dos2unix "$csh"; chmod a+x "$csh"
+    fi
+    dos2unix ~/custom.sh 2>/dev/null
+    chmod a+x ~/custom.sh 2>/dev/null
+
+    cd ~/batocera-containers
+    clear
+    echo "Starting Docker..."
+    ~/batocera-containers/batocera-containers
+
+    # Step 3: Install Portainer
+    echo "Installing Portainer..."
+    docker volume create portainer_data
+    docker run --device /dev/dri:/dev/dri --privileged --net host --ipc host -d \
+      --name portainer \
+      --restart=always \
+      -v /var/run/docker.sock:/var/run/docker.sock \
+      -v /media:/media \
+      -v portainer_data:/data \
+      portainer/portainer-ce:latest
+
+    # Enable Batocera Docker service
+    curl -Ls https://github.com/DTJW92/batocera-unofficial-addons/raw/refs/heads/main/docker/docker -o /userdata/system/services/docker && chmod +x /userdata/system/services/docker
+    batocera-services enable docker
+    batocera-services start docker
 else
-    echo -e '#!/bin/bash\n\n'"$startup\n" > "$csh"
-    dos2unix "$csh"; chmod a+x "$csh"
+    echo "Docker is already installed."
 fi
-dos2unix ~/custom.sh 2>/dev/null
-chmod a+x ~/custom.sh 2>/dev/null
 
-cd ~/batocera-containers
-clear
-echo "Starting Docker..."
-~/batocera-containers/batocera-containers
-
-# Step 3: Install Portainer
-echo "Installing Portainer..."
-docker volume create portainer_data
-docker run --device /dev/dri:/dev/dri --privileged --net host --ipc host -d \
-  --name portainer \
-  --restart=always \
-  -v /var/run/docker.sock:/var/run/docker.sock \
-  -v /media:/media \
-  -v portainer_data:/data \
-  portainer/portainer-ce:latest
-
-# Enable Batocera Docker service
-curl -Ls https://github.com/DTJW92/batocera-unofficial-addons/raw/refs/heads/main/docker/docker -o /userdata/system/services/docker && chmod +x /userdata/system/services/docker
-batocera-services enable docker
-batocera-services start docker
 
 # Step 4: Ensure the Webtop config directory exists
 echo "Creating Desktop directory..."
@@ -97,85 +105,63 @@ else
     shm_size="1gb"
 fi
 
-# Step 6: Install Webtop...
 echo "Installing Webtop..."
 
-# Choose Distro
-echo
-echo "Choose a base distro:"
-echo "1) alpine"
-echo "2) ubuntu"
-echo "3) fedora"
-echo "4) arch"
-echo "5) debian"
+# Step 1: Choose base distro (with Alpine warning + go back option)
+distros=(alpine ubuntu fedora arch debian)
 
 while true; do
-    echo -n "Enter choice [1-5]: "
-    read choice
-    case $choice in
-        1) distro="alpine"; break ;;
-        2) distro="ubuntu"; break ;;
-        3) distro="fedora"; break ;;
-        4) distro="arch"; break ;;
-        5) distro="debian"; break ;;
-        *) echo "Invalid choice." ;;
-    esac
+  echo "Select a base distro:"
+  select distro in "${distros[@]}"; do
+    if [[ -n "$distro" ]]; then
+
+      if [[ "$distro" == "alpine" ]]; then
+        echo
+        echo "WARNING: Alpine-based Webtop images do NOT support NVIDIA GPU passthrough."
+        echo "If you plan to use GPU acceleration, choose a different distro (e.g., Ubuntu, Arch)."
+        echo
+
+        while true; do
+          read -p "Continue with Alpine or go back? [c = continue, b = go back]: " response
+          case "$response" in
+            [Cc]) break 2 ;;  # Exit both loops and proceed
+            [Bb]) break ;;    # Break select, re-prompt distro
+            *) echo "Invalid input. Please enter 'c' or 'b'." ;;
+          esac
+        done
+
+      else
+        break 2  # Exit both loops and proceed with non-Alpine distro
+      fi
+
+    else
+      echo "Invalid selection."
+    fi
+  done
 done
 
-# Alpine warning
-if [[ "$distro" == "alpine" ]]; then
-    cat <<'EOF'
-WARNING: Alpine-based Webtop images do NOT support NVIDIA GPU passthrough.
-This means you won't be able to use GPU acceleration inside the container.
+# Step 2: Choose desktop environment
+envs=(xfce kde mate i3 openbox icewm)
+echo "Select a desktop environment:"
+select env in "${envs[@]}"; do
+  if [[ -n "$env" ]]; then break; else echo "Invalid selection."; fi
+done
 
-If you're running a system with an NVIDIA GPU and want desktop acceleration,
-choose a different base distro like Ubuntu or Arch.
-EOF
-    echo -n "Type 'c' to continue with Alpine, or 'b' to go back: "
-    read response
-    if [[ "${response,,}" == "b" ]]; then
-        exec "$0"
-    elif [[ "${response,,}" != "c" ]]; then
-        echo "Invalid input. Exiting."
-        exit 1
-    fi
+# Special case for Alpine XFCE being "latest"
+if [[ "$distro" == "alpine" && "$env" == "xfce" ]]; then
+  tag="latest"
+else
+  tag="$distro-$env"
 fi
 
-# Choose DE
-echo
-echo "Choose desktop environment:"
-echo "1) xfce"
-echo "2) kde"
-echo "3) mate"
-echo "4) i3"
-echo "5) openbox"
-echo "6) icewm"
-
-while true; do
-    echo -n "Enter choice [1-6]: "
-    read env_choice
-    case $env_choice in
-        1) env="xfce"; break ;;
-        2) env="kde"; break ;;
-        3) env="mate"; break ;;
-        4) env="i3"; break ;;
-        5) env="openbox"; break ;;
-        6) env="icewm"; break ;;
-        *) echo "Invalid choice." ;;
-    esac
-done
-
-[[ "$distro" == "alpine" && "$env" == "xfce" ]] && tag="latest" || tag="$distro-$env"
-
-# Final confirmation
-echo
-echo "You selected: $tag"
-echo -n "Proceed with installation? [y/N]: "
-read confirm
-if [[ "${confirm,,}" != "y" ]]; then
+# Confirm selection
+echo "You selected: Distro = $distro, Desktop = $env → Tag = $tag"
+read -p "Proceed with installation? [y/N]: " confirm
+if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
   echo "Installation cancelled."
   exit 1
 fi
+
 
 # Run Docker container
 docker run -d \
