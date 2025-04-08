@@ -117,14 +117,15 @@ If you're running a system with an NVIDIA GPU and want desktop acceleration,
 choose a different base distro like Ubuntu or Arch.
 EOF
         echo
-        echo -n "Type 'c' to continue with Alpine, or 'b' to go back: "
-        read response < /dev/tty
+echo -n "Type 'c' to continue with Alpine, or 'b' to go back: "
+read response
 
-        case "${response,,}" in
-          c) break 2 ;;
-          b) break ;;  # Go back to distro select
-          *) echo "Invalid input. Try again."; sleep 1 ;;
-        esac
+case "${response,,}" in
+  c) break 2 ;;
+  b) break ;;  # Go back to distro select
+  *) echo "Invalid input. Try again."; sleep 1 ;;
+esac
+
 
       else
         break 2
