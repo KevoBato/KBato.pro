@@ -110,30 +110,29 @@ echo "Installing Webtop..."
 # Step 1: Choose base distro (with Alpine warning + go back option)
 distros=(alpine ubuntu fedora arch debian)
 
-while true; do
+proceed_with_distro=false
+
+while [ "$proceed_with_distro" = false ]; do
   echo "Select a base distro:"
   select distro in "${distros[@]}"; do
     if [[ -n "$distro" ]]; then
-
       if [[ "$distro" == "alpine" ]]; then
         echo
         echo "WARNING: Alpine-based Webtop images do NOT support NVIDIA GPU passthrough."
         echo "If you plan to use GPU acceleration, choose a different distro (e.g., Ubuntu, Arch)."
         echo
 
-        while true; do
-          read -p "Continue with Alpine or go back? [c = continue, b = go back]: " response
-          case "$response" in
-            [Cc]) break 2 ;;  # Exit both loops and proceed
-            [Bb]) break ;;    # Break select, re-prompt distro
-            *) echo "Invalid input. Please enter 'c' or 'b'." ;;
-          esac
-        done
-
+        read -p "Continue with Alpine or go back? [c = continue, b = go back]: " response
+        if [[ "$response" =~ ^[Cc]$ ]]; then
+          proceed_with_distro=true
+          break
+        else
+          break
+        fi
       else
-        break 2  # Exit both loops and proceed with non-Alpine distro
+        proceed_with_distro=true
+        break
       fi
-
     else
       echo "Invalid selection."
     fi
@@ -161,7 +160,6 @@ if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
   echo "Installation cancelled."
   exit 1
 fi
-
 
 # Run Docker container
 docker run -d \
