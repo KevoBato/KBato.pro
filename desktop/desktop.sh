@@ -97,62 +97,81 @@ else
     shm_size="1gb"
 fi
 
-# Step 6: Install Webtop
+# Step 6: Install Webtop...
 echo "Installing Webtop..."
 
-distros=(alpine ubuntu fedora arch debian)
+# Choose Distro
+echo
+echo "Choose a base distro:"
+echo "1) alpine"
+echo "2) ubuntu"
+echo "3) fedora"
+echo "4) arch"
+echo "5) debian"
 
 while true; do
-  echo
-  echo "Select a base distro:"
-  select distro in "${distros[@]}"; do
-    if [[ -n "$distro" ]]; then
+    echo -n "Enter choice [1-5]: "
+    read choice
+    case $choice in
+        1) distro="alpine"; break ;;
+        2) distro="ubuntu"; break ;;
+        3) distro="fedora"; break ;;
+        4) distro="arch"; break ;;
+        5) distro="debian"; break ;;
+        *) echo "Invalid choice." ;;
+    esac
+done
 
-      if [[ "$distro" == "alpine" ]]; then
-        cat <<'EOF'
+# Alpine warning
+if [[ "$distro" == "alpine" ]]; then
+    cat <<'EOF'
 WARNING: Alpine-based Webtop images do NOT support NVIDIA GPU passthrough.
 This means you won't be able to use GPU acceleration inside the container.
 
 If you're running a system with an NVIDIA GPU and want desktop acceleration,
 choose a different base distro like Ubuntu or Arch.
 EOF
-        echo
-echo -n "Type 'c' to continue with Alpine, or 'b' to go back: "
-read response
-
-case "${response,,}" in
-  c) break 2 ;;
-  b) break ;;  # Go back to distro select
-  *) echo "Invalid input. Try again."; sleep 1 ;;
-esac
-
-
-      else
-        break 2
-      fi
-
-    else
-      echo "Invalid selection."
+    echo -n "Type 'c' to continue with Alpine, or 'b' to go back: "
+    read response
+    if [[ "${response,,}" == "b" ]]; then
+        exec "$0"
+    elif [[ "${response,,}" != "c" ]]; then
+        echo "Invalid input. Exiting."
+        exit 1
     fi
-  done
-done
+fi
 
-# Step 2: Select DE
-envs=(xfce kde mate i3 openbox icewm)
+# Choose DE
 echo
-echo "Select a desktop environment:"
-select env in "${envs[@]}"; do
-  if [[ -n "$env" ]]; then break; else echo "Invalid selection."; fi
+echo "Choose desktop environment:"
+echo "1) xfce"
+echo "2) kde"
+echo "3) mate"
+echo "4) i3"
+echo "5) openbox"
+echo "6) icewm"
+
+while true; do
+    echo -n "Enter choice [1-6]: "
+    read env_choice
+    case $env_choice in
+        1) env="xfce"; break ;;
+        2) env="kde"; break ;;
+        3) env="mate"; break ;;
+        4) env="i3"; break ;;
+        5) env="openbox"; break ;;
+        6) env="icewm"; break ;;
+        *) echo "Invalid choice." ;;
+    esac
 done
 
-# Special case for Alpine XFCE
 [[ "$distro" == "alpine" && "$env" == "xfce" ]] && tag="latest" || tag="$distro-$env"
 
 # Final confirmation
 echo
 echo "You selected: $tag"
 echo -n "Proceed with installation? [y/N]: "
-read confirm < /dev/tty
+read confirm
 if [[ "${confirm,,}" != "y" ]]; then
   echo "Installation cancelled."
   exit 1
