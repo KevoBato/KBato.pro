@@ -77,8 +77,8 @@ batocera-services enable docker
 batocera-services start docker
 
 # Step 4: Ensure the Webtop config directory exists
-echo "Creating Webtop directory..."
-mkdir -p /userdata/system/add-ons/webtop
+echo "Creating Desktop directory..."
+mkdir -p /userdata/system/add-ons/desktop
 
 # Step 5: Determine shared memory size based on total system RAM
 total_ram=$(grep MemTotal /proc/meminfo | awk '{print $2}')
@@ -96,22 +96,73 @@ fi
 
 # Step 6: Install Webtop
 echo "Installing Webtop..."
+
+# Step 1: Choose base distro (with Alpine warning + go back option)
+distros=(alpine ubuntu fedora arch debian)
+
+while true; do
+  echo "Select a base distro:"
+  select distro in "${distros[@]}"; do
+    if [[ -n "$distro" ]]; then
+      if [[ "$distro" == "alpine" ]]; then
+        echo
+        echo "WARNING: Alpine-based Webtop images do NOT support NVIDIA GPU passthrough."
+        echo "If you plan to use GPU acceleration, choose a different distro (e.g., Ubuntu, Arch)."
+        echo
+        read -p "Continue with Alpine or go back? [c = continue, b = go back]: " response
+        if [[ "$response" =~ ^[Bb]$ ]]; then
+          break  # break out of select, but continue outer while loop
+        else
+          break 2  # continue with Alpine
+        fi
+      else
+        break 2  # continue with valid non-Alpine distro
+      fi
+    else
+      echo "Invalid selection."
+    fi
+  done
+done
+
+# Step 2: Choose desktop environment
+envs=(xfce kde mate i3 openbox icewm)
+echo "Select a desktop environment:"
+select env in "${envs[@]}"; do
+  if [[ -n "$env" ]]; then break; else echo "Invalid selection."; fi
+done
+
+# Special case for Alpine XFCE being "latest"
+if [[ "$distro" == "alpine" && "$env" == "xfce" ]]; then
+  tag="latest"
+else
+  tag="$distro-$env"
+fi
+
+# Confirm selection
+echo "You selected: Distro = $distro, Desktop = $env → Tag = $tag"
+read -p "Proceed with installation? [y/N]: " confirm
+if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
+  echo "Installation cancelled."
+  exit 1
+fi
+
+# Run Docker container
 docker run -d \
-  --name=webtop \
+  --name=desktop \
   --security-opt seccomp=unconfined \
-  -e PUID=0 \
-  -e PGID=0 \
-  -e TZ=Etc/UTC \
+  -e PUID=$(id -u) \
+  -e PGID=$(id -g) \
+  -e TZ=$(cat /etc/timezone) \
   -e SUBFOLDER=/ \
-  -e TITLE=Webtop \
-  -v /userdata/system/add-ons/webtop:/config \
+  -e TITLE="Webtop ($distro $env)" \
+  -v /userdata/system/add-ons/desktop:/config \
   -v /userdata:/mnt/batocera \
   --device /dev/dri:/dev/dri \
   --device /dev/bus/usb:/dev/bus/usb \
   -p 3000:3000 \
-  --shm-size="$shm_size" \
+  --shm-size=$shm_size \
   --restart unless-stopped \
-  lscr.io/linuxserver/webtop:ubuntu-kde
+  lscr.io/linuxserver/webtop:$tag
 
 # Step 7: Install Google Chrome AppImage
 echo "Installing Google Chrome AppImage..."
