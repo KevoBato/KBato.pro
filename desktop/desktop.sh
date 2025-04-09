@@ -150,7 +150,7 @@ docker run -d \
     -e SUBFOLDER=/ \
     -e TITLE="Webtop ($distro $env)" \
     -v /userdata/system/add-ons/desktop:/config \
-    -v /userdata:/mnt/batocera \
+    -v /userdata:/config/batocera \
     --device /dev/dri:/dev/dri \
     --device /dev/bus/usb:/dev/bus/usb \
     -p 3000:3000 \
