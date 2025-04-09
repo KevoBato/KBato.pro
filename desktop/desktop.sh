@@ -63,11 +63,7 @@ else
     echo "Docker is already installed."
 fi
 
-# Step 3: Create config folder
-echo "Creating Desktop directory..."
-mkdir -p /userdata/system/add-ons/desktop
-
-# Step 4: Calculate appropriate shm size
+# Step 3: Calculate appropriate shm size
 total_ram=$(grep MemTotal /proc/meminfo | awk '{print $2}')
 if [ "$total_ram" -gt 14000000 ]; then
     shm_size="8gb"
@@ -81,7 +77,7 @@ else
     shm_size="1gb"
 fi
 
-# Step 5: Distro selection with Alpine warning
+# Step 4: Distro selection with Alpine warning
 while true; do
     echo "Select a base distro:"
     echo "1) alpine"
@@ -109,7 +105,7 @@ while true; do
     esac
 done
 
-# Step 6: Desktop environment selection
+# Step 5: Desktop environment selection
 while true; do
     echo "Select a desktop environment:"
     echo "1) xfce"
@@ -131,7 +127,7 @@ while true; do
     esac
 done
 
-# Step 7: Determine image tag
+# Step 6: Determine image tag
 [[ "$distro" == "alpine" && "$env" == "xfce" ]] && tag="latest" || tag="$distro-$env"
 
 # Final confirmation
@@ -140,7 +136,7 @@ echo -n "Proceed with installation? [y/N]: "
 read -r confirm < /dev/tty
 [[ "${confirm,,}" != "y" ]] && echo "Installation cancelled." && exit 1
 
-# Step 8: Run Docker Webtop container
+# Step 7: Run Docker Webtop container
 docker run -d \
     --name=desktop \
     --security-opt seccomp=unconfined \
@@ -149,7 +145,6 @@ docker run -d \
     -e TZ=$(cat /etc/timezone) \
     -e SUBFOLDER=/ \
     -e TITLE="Webtop ($distro $env)" \
-    -v /userdata/system/add-ons/desktop:/config \
     -v /userdata:/config/batocera \
     --device /dev/dri:/dev/dri \
     --device /dev/bus/usb:/dev/bus/usb \
@@ -158,7 +153,7 @@ docker run -d \
     --restart unless-stopped \
     lscr.io/linuxserver/webtop:$tag
 
-# Step 9: Install Google Chrome AppImage
+# Step 8: Install Google Chrome AppImage
 echo "Installing Google Chrome AppImage..."
 if ! command -v jq >/dev/null 2>&1; then
     echo "Missing dependency: jq is required. Please install jq and re-run."
@@ -169,7 +164,7 @@ mkdir -p /userdata/system/add-ons/google-chrome/extra
 wget -q --show-progress -O /userdata/system/add-ons/google-chrome/GoogleChrome.AppImage "$appimage_url"
 chmod +x /userdata/system/add-ons/google-chrome/GoogleChrome.AppImage
 
-# Step 10: Create launcher in Ports
+# Step 9: Create launcher in Ports
 echo "Creating BatoDesktop launcher in Ports..."
 mkdir -p /userdata/roms/ports
 cat << 'EOF' > /userdata/roms/ports/BatoDesktop.sh
@@ -178,7 +173,7 @@ DISPLAY=:0.0 /userdata/system/add-ons/google-chrome/GoogleChrome.AppImage --no-s
 EOF
 chmod +x /userdata/roms/ports/BatoDesktop.sh
 
-# Step 11: Add controller support
+# Step 10: Add controller support
 cat << 'EOF' > /userdata/roms/ports/BatoDesktop.sh.keys
 {
     "actions_player1": [
@@ -205,9 +200,9 @@ cat << 'EOF' > /userdata/roms/ports/BatoDesktop.sh.keys
 }
 EOF
 
-# Step 12: Refresh Ports menu
+# Step 11: Refresh Ports menu
 echo "Refreshing Ports menu..."
 curl -s http://127.0.0.1:1234/reloadgames
 
-# Step 13: Done!
+# Step 12: Done!
 echo "BatoDesktop installed successfully. Launch from the Ports menu!"
