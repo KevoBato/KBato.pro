@@ -145,7 +145,7 @@ docker run -d \
     -e TZ=$(cat /etc/timezone) \
     -e SUBFOLDER=/ \
     -e TITLE="Webtop ($distro $env)" \
-    -v /userdata:/config/batocera \
+    -v /userdata:/config/ \
     --device /dev/dri:/dev/dri \
     --device /dev/bus/usb:/dev/bus/usb \
     -p 3000:3000 \
