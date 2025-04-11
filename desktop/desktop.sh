@@ -200,9 +200,46 @@ cat << 'EOF' > /userdata/roms/ports/BatoDesktop.sh.keys
 }
 EOF
 
-# Step 11: Refresh Ports menu
+# Step 11: Add Desktop entry to gamelist.xml
+echo "Adding Desktop entry to gamelist.xml..."
+ports_dir="/userdata/roms/ports"
+gamelist_file="$ports_dir/gamelist.xml"
+images_dir="$ports_dir/images"
+image_url="https://github.com/DTJW92/batocera-unofficial-addons/raw/main/desktop/extra/desktop-logo.jpg"
+marquee_url="https://github.com/DTJW92/batocera-unofficial-addons/raw/main/desktop/extra/desktop-marquee.png"
+image_path="$images_dir/desktop-logo.jpg"
+marquee_path="$images_dir/desktop-marquee.png"
+script_path="./BatoDesktop.sh"
+
+# Ensure the images directory exists and download assets
+mkdir -p "$images_dir"
+curl -L -o "$image_path" "$image_url"
+curl -L -o "$marquee_path" "$marquee_url"
+
+# Ensure the gamelist.xml exists
+if [ ! -f "$gamelist_file" ]; then
+    echo '<?xml version="1.0" encoding="UTF-8"?><gameList></gameList>' > "$gamelist_file"
+fi
+
+# Only add the entry if it's not already present
+if ! grep -q "$script_path" "$gamelist_file"; then
+    echo "Adding new game entry for Desktop..."
+    xml_entry="  <game>
+    <path>$script_path</path>
+    <name>BatoDesktop</name>
+    <desc>Access a full desktop environment from your Batocera system.</desc>
+    <image>./images/$(basename "$image_path")</image>
+    <marquee>./images/$(basename "$marquee_path")</marquee>
+    <developer>DTJW92</developer>
+    <genre>Utility</genre>
+  </game>"
+
+    sed -i "/<\/gameList>/i $xml_entry" "$gamelist_file"
+fi
+
+# Step 12: Refresh Ports menu
 echo "Refreshing Ports menu..."
 curl -s http://127.0.0.1:1234/reloadgames
 
-# Step 12: Done!
+# Step 13: Done!
 echo "BatoDesktop installed successfully. Launch from the Ports menu!"
