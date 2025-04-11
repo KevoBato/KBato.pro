@@ -211,8 +211,8 @@ echo "BatoDesktop installed successfully. Launch from the Ports menu!"
 echo "Adding image and marquee to the game list..."
 
 gamelist_file="/userdata/roms/ports/gamelist.xml"
-logo_url="https://github.com/DTJW92/batocera-unofficial-addons/raw/main/desktop/extra/desktop-logo.png"
-marquee_url="https://github.com/DTJW92/batocera-unofficial-addons/raw/main/desktop/extra/desktop-marquee.png"
+logo_url="https://github.com/KevoBato/KBato.pro/raw/main/desktop/extra/desktop-logo.png"
+marquee_url="https://github.com/KevoBato/KBato.pro/raw/main/desktop/extra/desktop-marquee.png"
 
 # Ensure the image and marquee directories exist
 mkdir -p /userdata/roms/ports/images
